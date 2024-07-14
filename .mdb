@@ -1,0 +1,10 @@
+{
+  "projectName": "backend",
+  "meta": {
+    "type": "backend"
+  },
+  "backend": {
+    "platform": "node17"
+  },
+  "hash": "beb8d71d"
+}
