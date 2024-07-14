@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 const app = express();
 app.use(cors()); // Apply CORS middleware to all routes
 
-const port = process.env.PORT || 3000; // Use environment variable for port
+const port = 3000; // Explicitly set the port to 3000
 
 // Replace with your actual MongoDB connection string
 const mongoURI = 'mongodb+srv://Weppso:Weppso123+@weppso.avz7iqd.mongodb.net/?retryWrites=true&w=majority&appName=Weppso';
@@ -54,6 +54,22 @@ app.post('/api/contact', async (req, res) => {
     console.error('Error saving contact:', err);
     res.status(500).json({ message: 'Error submitting contact' });
   }
+});
+
+// API endpoint to get all contact data (GET request)
+app.get('/api/contacts', async (req, res) => {
+  try {
+    const contacts = await Contact.find();
+    res.json(contacts);
+  } catch (err) {
+    console.error('Error fetching contacts:', err);
+    res.status(500).json({ message: 'Error fetching contacts' });
+  }
+});
+
+// Simple route to show "Hello" when accessing the root URL
+app.get('/', (req, res) => {
+  res.send('Hello');
 });
 
 app.listen(port, () => console.log(`Server listening on port ${port}`));
