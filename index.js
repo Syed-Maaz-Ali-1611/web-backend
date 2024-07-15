@@ -1,22 +1,20 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const cors = require('cors'); // Import the cors library
-
+const cors = require('cors');
 const mongoose = require('mongoose');
+const nodemailer = require('nodemailer');
 
 const app = express();
-app.use(cors()); // Apply CORS middleware to all routes
+app.use(cors());
 
-const port = 3000; // Explicitly set the port to 3000
+const port = 3000;
 
-// Replace with your actual MongoDB connection string
 const mongoURI = 'mongodb+srv://Weppso:Weppso123+@weppso.avz7iqd.mongodb.net/?retryWrites=true&w=majority&appName=Weppso';
 
 mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Define the contact schema for MongoDB
 const ContactSchema = new mongoose.Schema({
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
@@ -28,15 +26,21 @@ const ContactSchema = new mongoose.Schema({
 
 const Contact = mongoose.model('Contact', ContactSchema);
 
-// Body parser middleware to handle form data
 app.use(bodyParser.json());
 
-// API endpoint to receive contact form data (POST request)
+// Configure NodeMailer for Outlook
+const transporter = nodemailer.createTransport({
+  service: 'hotmail',
+  auth: {
+    user: 'weppso@outlook.com',
+    pass: 'Software123+'
+  }
+});
+
 app.post('/api/contact', async (req, res) => {
   const { firstName, lastName, phoneNumber, email, companyName, message } = req.body;
 
   try {
-    // Create a new contact document
     const newContact = new Contact({
       firstName,
       lastName,
@@ -46,10 +50,31 @@ app.post('/api/contact', async (req, res) => {
       message,
     });
 
-    // Save the contact to MongoDB
     await newContact.save();
 
-    res.json({ message: 'Contact submitted successfully!' });
+    // Send email to the user
+    const mailOptions = {
+      from: 'weppso@outlook.com',
+      to: email,
+      subject: 'Thank you for contacting us',
+      text: `Hello ${firstName},
+THANK YOU FOR REACHING US. WE'LL CONTACT YOU SOON.
+Click here to explore more:
+https://web-eta-ruby.vercel.app/`,
+      html: `Hello ${firstName},<br>
+THANK YOU FOR REACHING US. WE'LL CONTACT YOU SOON.<br>
+Click here to explore more:<br>
+<a href="https://web-eta-ruby.vercel.app/">https://web-eta-ruby.vercel.app/</a>`
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error('Error sending email:', error);
+        return res.status(500).json({ message: 'Error submitting contact and sending email' });
+      }
+      console.log('Email sent:', info.response);
+      res.json({ message: 'Contact submitted successfully and email sent!' });
+    });
   } catch (err) {
     console.error('Error saving contact:', err);
     res.status(500).json({ message: 'Error submitting contact' });
